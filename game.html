@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Координация по времени — Игра</title>
+    <link rel="stylesheet" href="styles/style.css" />
+  </head>
+  <body class="screen screen--game">
+    <div class="noise"></div>
+    <header class="game-head">
+      <div class="player-line">
+        <p class="badge" id="player-name">Игрок</p>
+        <p>
+          <span>Уровень: </span><strong id="level-label">—</strong>
+        </p>
+      </div>
+      <div class="status-items">
+        <div>
+          <p class="muted">Общий таймер</p>
+          <p class="timer" id="global-timer">03:00</p>
+        </div>
+        <div>
+          <p class="muted">Очки</p>
+          <p class="score" id="total-score">0</p>
+        </div>
+        <div>
+          <p class="muted">Штрафы</p>
+          <p class="score penalty" id="penalty-score">0</p>
+        </div>
+        <button id="exit-btn" class="ghost">Завершить игру</button>
+      </div>
+    </header>
+
+    <main class="game-stage">
+      <aside class="card card--brief">
+        <h2 id="level-title">Подготовка</h2>
+        <p id="level-description">
+          Вы ещё не начали. Пройдите уровни по очереди, создавая динамические
+          ответы на вопросы времени.
+        </p>
+        <div class="progress">
+          <div class="progress__bar" id="round-progress"></div>
+        </div>
+        <div class="level-actions">
+          <button id="start-level" class="primary">Запустить уровень</button>
+          <button id="skip-level" class="ghost">Пропустить (штраф)</button>
+        </div>
+      </aside>
+
+      <section class="playground" id="playground" aria-live="polite"></section>
+    </main>
+
+    <template id="floating-template">
+      <div class="floater"></div>
+    </template>
+
+    <script type="module" src="scripts/game.js"></script>
+  </body>
+</html>

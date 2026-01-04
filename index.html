@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Координация по времени — Старт</title>
+    <link rel="stylesheet" href="styles/style.css" />
+  </head>
+  <body class="screen screen--splash">
+    <div class="noise"></div>
+    <header class="app-header">
+      <div>
+        <p class="badge">Game_Plakhotnikov_TimeCoordination</p>
+        <h1>Координация по времени</h1>
+        <p class="tagline">
+          Проверьте, насколько хорошо вы ощущаете время: лампы вспыхивают,
+          мыши бегут к норке, а прыгуны подчиняются только точным секундам.
+        </p>
+      </div>
+      <nav class="top-nav">
+        <a href="leaderboard.html">Рейтинг</a>
+        <a href="#about" class="ghost">О задании</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="card" aria-labelledby="start-title">
+        <h2 id="start-title">Мини-авторизация</h2>
+        <p>
+          Введите ваше имя и выберите стартовое ускорение. Настройки сохранятся на
+          этом устройстве, чтобы можно было продолжить позже.
+        </p>
+        <form id="start-form" class="start-form">
+          <label>
+            Имя игрока
+            <input
+              type="text"
+              name="playerName"
+              autocomplete="name"
+              required
+              minlength="2"
+              maxlength="24"
+              placeholder="Например, Ася"
+            />
+          </label>
+          <label>
+            Сложность (ускорение)
+            <select name="difficulty" required>
+              <option value="calm">Разминка (спокойный ритм)</option>
+              <option value="steady">Стандарт (базовый ритм)</option>
+              <option value="rush">Штурм (ускорение)</option>
+            </select>
+          </label>
+          <label class="agree">
+            <input type="checkbox" required />
+            Я готов(а) уложиться во временное ограничение.
+          </label>
+          <button type="submit" class="primary">Начать игру</button>
+        </form>
+      </section>
+
+      <section class="card card--info" id="about">
+        <h2>Логика уровней</h2>
+        <ul class="levels-list">
+          <li>
+            <strong>Уровень 1. Импульс лампы.</strong> Запоминайте секунды и
+            останавливайте таймер клавишей <kbd>Space</kbd>.
+          </li>
+          <li>
+            <strong>Уровень 2. Мышь и тоннель.</strong> Перемещайте мышь в норку,
+            удерживая её ровно заданное время.
+          </li>
+          <li>
+            <strong>Уровень 3. Прыгун по таймеру.</strong> Улавливайте интервалы и
+            фиксируйте их двойным кликом.
+          </li>
+        </ul>
+        <p>
+          Каждый уровень генерирует до пяти вариаций заданий с произвольными
+          паузами и расположением элементов. Очки зависят от точности и сложности,
+          штрафы начисляются за ранние действия и неуспешные попытки.
+        </p>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <p>Последние результаты сохраняются локально и доступны на вкладке «Рейтинг».</p>
+    </footer>
+
+    <script type="module" src="scripts/index.js"></script>
+  </body>
+</html>

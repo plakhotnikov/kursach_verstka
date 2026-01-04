@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Координация по времени — Финал и рейтинг</title>
+    <link rel="stylesheet" href="styles/style.css" />
+  </head>
+  <body class="screen screen--rating">
+    <div class="noise"></div>
+    <header class="app-header">
+      <div>
+        <p class="badge">Результаты</p>
+        <h1>Финал &amp; таблица</h1>
+      </div>
+      <nav class="top-nav">
+        <a href="index.html">Старт</a>
+        <a href="game.html">Игра</a>
+      </nav>
+    </header>
+
+    <main class="rating-grid">
+      <section class="card" id="session-summary">
+        <h2>Текущий забег</h2>
+        <div class="summary">
+          <p id="summary-player">Игрок: —</p>
+          <p id="summary-score">Очки: 0</p>
+          <p id="summary-penalty">Штрафы: 0</p>
+          <p id="summary-duration">Затраченное время: —</p>
+          <p id="summary-status">Статус: —</p>
+        </div>
+        <div class="summary-actions">
+          <button id="restart-btn" class="primary">Новая игра</button>
+        </div>
+      </section>
+
+      <section class="card card--info">
+        <h2>Рейтинг игроков</h2>
+        <ol id="rating-list" class="rating-list"></ol>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <p>
+        Данные хранятся локально (LocalStorage). Чтобы очистить историю,
+        используйте кнопку ниже.
+      </p>
+      <button id="clear-rating" class="ghost">Стереть рейтинг</button>
+    </footer>
+
+    <script type="module" src="scripts/results.js"></script>
+  </body>
+</html>
