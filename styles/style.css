@@ -109,16 +109,26 @@ p {
   gap: 1.6rem;
 }
 
+.screen--rating .rating-grid {
+  grid-template-columns: 1fr;
+  align-items: start;
+}
+
+.screen--rating #session-summary {
+  grid-column: 1 / -1;
+}
+
+.rating-row {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1.6rem;
+  align-content: start;
+}
+
 .start-form {
   display: grid;
   gap: 1rem;
-}
-
-.start-form .agree {
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    margin: 0.2rem 0;
 }
 
 .start-form input,
@@ -130,11 +140,6 @@ p {
   border: 1px solid rgba(255, 255, 255, 0.2);
   background: rgba(255, 255, 255, 0.03);
   color: inherit;
-}
-
-.start-form .agree input {
-    width: auto;
-    margin-top: 0;
 }
 
 .start-form input:focus,
@@ -228,6 +233,12 @@ button:hover {
   border-radius: inherit;
   background: linear-gradient(90deg, var(--accent), var(--accent-2));
   transition: width 0.3s ease;
+}
+
+.level-actions {
+  margin-top: 1rem;
+  display: grid;
+  gap: 0.6rem;
 }
 
 .playground .mission-title {
@@ -476,5 +487,9 @@ button:hover {
 
   .game-head .status-items {
     flex-wrap: wrap;
+  }
+
+  .screen--rating .rating-grid {
+    grid-template-columns: 1fr;
   }
 }

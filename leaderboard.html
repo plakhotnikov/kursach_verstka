@@ -14,8 +14,8 @@
         <h1>Финал &amp; таблица</h1>
       </div>
       <nav class="top-nav">
-        <a href="index.html">Старт</a>
-        <a href="game.html">Игра</a>
+        <a href="index.html">Главная страница</a>
+        <a href="game.html">Начать заново</a>
       </nav>
     </header>
 
@@ -30,14 +30,26 @@
           <p id="summary-status">Статус: —</p>
         </div>
         <div class="summary-actions">
-          <button id="restart-btn" class="primary">Новая игра</button>
+          <button id="restart-btn" class="primary">На главную страницу</button>
         </div>
       </section>
 
-      <section class="card card--info">
-        <h2>Рейтинг игроков</h2>
-        <ol id="rating-list" class="rating-list"></ol>
-      </section>
+      <div class="rating-row">
+        <section class="card card--info">
+          <h2>Импульс лампы</h2>
+          <ol id="rating-lamp" class="rating-list"></ol>
+        </section>
+
+        <section class="card card--info">
+          <h2>Мышь и тоннель</h2>
+          <ol id="rating-runner" class="rating-list"></ol>
+        </section>
+
+        <section class="card card--info">
+          <h2>Прыгун по таймеру</h2>
+          <ol id="rating-pulse" class="rating-list"></ol>
+        </section>
+      </div>
     </main>
 
     <footer class="app-footer">

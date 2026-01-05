@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (existing) {
     form.playerName.value = existing.name;
-    form.difficulty.value = existing.difficulty;
+    form.levelId.value = existing.levelId || 'lamp';
   }
 
   form.addEventListener('submit', (event) => {
@@ -14,7 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const formData = new FormData(form);
     const payload = {
       name: formData.get('playerName').trim(),
-      difficulty: formData.get('difficulty'),
+      levelId: formData.get('levelId'),
       createdAt: Date.now(),
     };
 

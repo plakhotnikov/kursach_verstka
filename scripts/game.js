@@ -5,28 +5,11 @@ if (!player) {
   window.location.replace('index.html');
 }
 
-const difficultyProfiles = {
-  calm: {
-    label: 'Разминка',
-    globalTime: 210,
-    tolerance: 900,
-    penaltyFactor: 15,
-    distraction: 3,
-  },
-  steady: {
-    label: 'Стандарт',
-    globalTime: 180,
-    tolerance: 750,
-    penaltyFactor: 20,
-    distraction: 5,
-  },
-  rush: {
-    label: 'Штурм',
-    globalTime: 150,
-    tolerance: 600,
-    penaltyFactor: 25,
-    distraction: 7,
-  },
+const baseProfile = {
+  globalTime: 60,
+  tolerance: 750,
+  penaltyFactor: 20,
+  distraction: 5,
 };
 
 const levels = [
@@ -53,6 +36,12 @@ const levels = [
   },
 ];
 
+const levelMaxScores = {
+  lamp: 600,
+  runner: 750,
+  pulse: 900,
+};
+
 const ui = {
   playerName: document.getElementById('player-name'),
   levelLabel: document.getElementById('level-label'),
@@ -68,37 +57,48 @@ const ui = {
   timer: document.getElementById('global-timer'),
 };
 
-const profile = difficultyProfiles[player?.difficulty] || difficultyProfiles.steady;
+const selectedLevel = levels.find((item) => item.id === player?.levelId) || levels[0];
+const profile = baseProfile;
 
 let session = {
   playerName: player.name,
-  difficulty: player.difficulty,
+  levelId: selectedLevel.id,
+  levelTitle: selectedLevel.title,
   totalScore: 0,
   penalties: 0,
   startedAt: Date.now(),
-  levelResults: [],
+  levelResult: null,
   status: 'in-progress',
 };
 
-let levelIndex = -1;
 let currentEngine = null;
 let globalTimerId = null;
 let timeLeft = profile.globalTime;
+const levelMax = levelMaxScores[selectedLevel.id] || 0;
+let restartRequested = false;
 
-ui.playerName.textContent = `${player.name} · ${profile.label}`;
-ui.levelLabel.textContent = 'Не начато';
+ui.playerName.textContent = `${player.name}`;
+ui.levelLabel.textContent = selectedLevel.title;
 ui.startLevelBtn.disabled = false;
 ui.skipLevelBtn.disabled = true;
+ui.levelTitle.textContent = selectedLevel.title;
+ui.levelDescription.textContent = selectedLevel.description;
+updateScoreDisplay();
 
 ui.startLevelBtn.addEventListener('click', () => {
-  startNextLevel();
+  if (currentEngine) {
+    restartRequested = true;
+    currentEngine.abort('Перезапуск уровня.');
+    return;
+  }
+  startSelectedLevel();
 });
 
 ui.skipLevelBtn.addEventListener('click', () => {
   if (!currentEngine) return;
   currentEngine.abort('Игрок остановил уровень.');
   applyPenalty(profile.penaltyFactor * 2);
-  announce(`Уровень ${levels[levelIndex].title} остановлен.`);
+  announce(`Уровень «${selectedLevel.title}» остановлен.`);
 });
 
 ui.exitBtn.addEventListener('click', () => {
@@ -109,20 +109,11 @@ spawnFloaters(profile.distraction + 2);
 startGlobalTimer();
 setupBeforeUnload();
 
-function startNextLevel() {
+function startSelectedLevel() {
   if (currentEngine) return;
-  levelIndex += 1;
-  if (levelIndex >= levels.length) {
-    finalizeGame('completed', 'Все уровни успешно завершены.');
-    return;
-  }
-
-  const definition = levels[levelIndex];
-  ui.levelLabel.textContent = `${levelIndex + 1} / ${levels.length}`;
-  ui.levelTitle.textContent = definition.title;
-  ui.levelDescription.textContent = definition.description;
-  ui.startLevelBtn.disabled = true;
+  ui.startLevelBtn.disabled = false;
   ui.skipLevelBtn.disabled = false;
+  ui.startLevelBtn.textContent = 'Перезапуск';
   ui.roundProgress.style.width = '0%';
   ui.playground.innerHTML = '';
   spawnFloaters(profile.distraction);
@@ -134,11 +125,10 @@ function startNextLevel() {
     onPenalty: applyPenalty,
     onRoundProgress: updateProgress,
     onComplete: handleLevelComplete,
-    levelIndex,
     announce,
   };
 
-  currentEngine = definition.build(context);
+  currentEngine = selectedLevel.build(context);
 }
 
 function updateProgress(done, total) {
@@ -149,7 +139,7 @@ function updateProgress(done, total) {
 function onScore(points) {
   const awarded = Math.max(0, Math.round(points));
   session.totalScore += awarded;
-  ui.totalScore.textContent = session.totalScore;
+  updateScoreDisplay();
   return awarded;
 }
 
@@ -158,33 +148,39 @@ function applyPenalty(value) {
   session.penalties += penalty;
   ui.penaltyScore.textContent = session.penalties;
   session.totalScore = Math.max(0, session.totalScore - Math.round(penalty / 2));
-  ui.totalScore.textContent = session.totalScore;
+  updateScoreDisplay();
   return penalty;
 }
 
 function handleLevelComplete(result) {
-  session.levelResults[levelIndex] = result;
+  session.levelResult = result;
   if (result.success) {
-    announce(`Уровень «${levels[levelIndex].title}» пройден.`);
+    announce(`Уровень «${selectedLevel.title}» пройден.`);
     currentEngine = null;
     ui.startLevelBtn.disabled = false;
-    ui.startLevelBtn.textContent =
-      levelIndex + 1 >= levels.length ? 'Завершить!' : 'Следующий уровень';
+    ui.startLevelBtn.textContent = 'Запустить уровень';
     ui.skipLevelBtn.disabled = true;
-    if (levelIndex + 1 >= levels.length) {
-      finalizeGame('completed', 'Все уровни пройдены.');
-    }
+    finalizeGame('completed', 'Уровень успешно завершён.');
   } else {
     if (result.score) {
       session.totalScore = Math.max(0, session.totalScore - result.score);
-      ui.totalScore.textContent = session.totalScore;
+      updateScoreDisplay();
     }
-    announce(`Недостаточно очков на уровне «${levels[levelIndex].title}». Попробуйте снова.`);
+    if (restartRequested) {
+      restartRequested = false;
+      currentEngine = null;
+      ui.startLevelBtn.disabled = false;
+      ui.startLevelBtn.textContent = 'Запустить уровень';
+      ui.skipLevelBtn.disabled = true;
+      announce(`Уровень «${selectedLevel.title}» перезапущен.`);
+      startSelectedLevel();
+      return;
+    }
+    announce(`Недостаточно очков на уровне «${selectedLevel.title}». Попробуйте снова.`);
     currentEngine = null;
     ui.startLevelBtn.disabled = false;
     ui.skipLevelBtn.disabled = true;
     ui.startLevelBtn.textContent = 'Повторить уровень';
-    levelIndex -= 1;
   }
 }
 
@@ -208,6 +204,14 @@ function updateGlobalTimer() {
   ui.timer.textContent = `${minutes}:${seconds}`;
 }
 
+function updateScoreDisplay() {
+  if (levelMax) {
+    ui.totalScore.textContent = `${session.totalScore} / ${levelMax}`;
+  } else {
+    ui.totalScore.textContent = session.totalScore;
+  }
+}
+
 function finalizeGame(status, message) {
   if (session.status !== 'in-progress') return;
   clearInterval(globalTimerId);
@@ -216,7 +220,7 @@ function finalizeGame(status, message) {
   session.message = message;
   storage.saveSession(session);
   if (status === 'completed') {
-    storage.pushRating({
+    storage.pushRating(session.levelId, {
       name: session.playerName,
       score: session.totalScore,
       penalty: session.penalties,
@@ -442,7 +446,7 @@ function createRunnerEngine(context) {
   function prepareRound() {
     if (dragging) return;
     ready = true;
-    targetDelay = randomBetween(2000, 4500) * (profile === difficultyProfiles.rush ? 0.8 : 1);
+    targetDelay = randomBetween(2000, 4500);
     hint.textContent = `Держите мышь ${formatMs(targetDelay)} c и бросьте в норку.`;
     positionRunner(0.1);
     positionGoal(Math.random() * 0.6 + 0.3);

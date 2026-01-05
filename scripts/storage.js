@@ -4,7 +4,11 @@ const STORAGE_KEYS = {
   rating: 'timeCoordination_rating',
 };
 
-const defaultRating = [];
+const defaultRating = {
+  lamp: [],
+  runner: [],
+  pulse: [],
+};
 
 const safeParse = (value, fallback) => {
   try {
@@ -32,14 +36,27 @@ export const storage = {
     return safeParse(localStorage.getItem(STORAGE_KEYS.session), null);
   },
   getRating() {
-    return safeParse(localStorage.getItem(STORAGE_KEYS.rating), defaultRating);
+    const stored = safeParse(localStorage.getItem(STORAGE_KEYS.rating), defaultRating);
+    if (Array.isArray(stored)) {
+      return {
+        lamp: stored,
+        runner: [],
+        pulse: [],
+      };
+    }
+    return {
+      ...defaultRating,
+      ...stored,
+    };
   },
-  pushRating(entry) {
+  pushRating(levelId, entry) {
     const rating = this.getRating();
-    rating.push(entry);
-    rating.sort((a, b) => b.score - a.score || a.penalty - b.penalty);
-    const trimmed = rating.slice(0, 20);
-    localStorage.setItem(STORAGE_KEYS.rating, JSON.stringify(trimmed));
+    const bucket = rating[levelId] || [];
+    const enriched = { ...entry, levelId };
+    bucket.push(enriched);
+    bucket.sort((a, b) => b.score - a.score || a.penalty - b.penalty);
+    rating[levelId] = bucket.slice(0, 20);
+    localStorage.setItem(STORAGE_KEYS.rating, JSON.stringify(rating));
   },
   clearRating() {
     localStorage.removeItem(STORAGE_KEYS.rating);

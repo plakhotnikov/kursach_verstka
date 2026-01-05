@@ -4,7 +4,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const session = storage.getSession();
   const rating = storage.getRating();
   renderSummary(session);
-  renderRating(rating);
+  renderRating(rating.lamp, 'rating-lamp');
+  renderRating(rating.runner, 'rating-runner');
+  renderRating(rating.pulse, 'rating-pulse');
 
   document.getElementById('restart-btn').addEventListener('click', () => {
     window.location.href = 'index.html';
@@ -45,15 +47,16 @@ function renderSummary(session) {
   summaryElements.penalty.textContent = `Штрафы: ${session.penalties}`;
   summaryElements.duration.textContent = `Затраченное время: ${formatSeconds(spent)}`;
   const extra = session.message ? ` · ${session.message}` : '';
-  summaryElements.status.textContent = `Статус: ${statusLabel(session.status)}${extra}`;
+  const levelText = session.levelTitle ? ` · ${session.levelTitle}` : '';
+  summaryElements.status.textContent = `Статус: ${statusLabel(session.status)}${levelText}${extra}`;
 }
 
-function renderRating(records) {
-  const list = document.getElementById('rating-list');
+function renderRating(records, listId) {
+  const list = document.getElementById(listId);
   list.innerHTML = '';
   if (!records || records.length === 0) {
     const empty = document.createElement('li');
-    empty.textContent = 'Пока нет результатов. Пройдите игру!';
+    empty.textContent = 'Пока нет результатов.';
     list.appendChild(empty);
     return;
   }
@@ -61,7 +64,7 @@ function renderRating(records) {
   records.forEach((record) => {
     const item = document.createElement('li');
     const left = document.createElement('span');
-    left.textContent = `${record.name}`;
+    left.textContent = truncateText(record.name, 12);
     const right = document.createElement('span');
     right.textContent = `${record.score} очков · штраф ${record.penalty}`;
     item.append(left, right);
@@ -86,4 +89,11 @@ function statusLabel(status) {
     default:
       return status || '—';
   }
+}
+
+function truncateText(value, limit) {
+  if (!value) return '—';
+  const text = String(value);
+  if (text.length <= limit) return text;
+  return `${text.slice(0, Math.max(1, limit - 3))}...`;
 }
