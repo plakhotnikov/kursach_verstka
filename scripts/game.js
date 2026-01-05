@@ -36,12 +36,6 @@ const levels = [
   },
 ];
 
-const levelMaxScores = {
-  lamp: 600,
-  runner: 750,
-  pulse: 900,
-};
-
 const ui = {
   playerName: document.getElementById('player-name'),
   levelLabel: document.getElementById('level-label'),
@@ -74,7 +68,6 @@ let session = {
 let currentEngine = null;
 let globalTimerId = null;
 let timeLeft = profile.globalTime;
-const levelMax = levelMaxScores[selectedLevel.id] || 0;
 let restartRequested = false;
 
 ui.playerName.textContent = `${player.name}`;
@@ -83,7 +76,7 @@ ui.startLevelBtn.disabled = false;
 ui.skipLevelBtn.disabled = true;
 ui.levelTitle.textContent = selectedLevel.title;
 ui.levelDescription.textContent = selectedLevel.description;
-updateScoreDisplay();
+ui.totalScore.textContent = session.totalScore;
 
 ui.startLevelBtn.addEventListener('click', () => {
   if (currentEngine) {
@@ -139,7 +132,7 @@ function updateProgress(done, total) {
 function onScore(points) {
   const awarded = Math.max(0, Math.round(points));
   session.totalScore += awarded;
-  updateScoreDisplay();
+  ui.totalScore.textContent = session.totalScore;
   return awarded;
 }
 
@@ -148,7 +141,7 @@ function applyPenalty(value) {
   session.penalties += penalty;
   ui.penaltyScore.textContent = session.penalties;
   session.totalScore = Math.max(0, session.totalScore - Math.round(penalty / 2));
-  updateScoreDisplay();
+  ui.totalScore.textContent = session.totalScore;
   return penalty;
 }
 
@@ -204,13 +197,6 @@ function updateGlobalTimer() {
   ui.timer.textContent = `${minutes}:${seconds}`;
 }
 
-function updateScoreDisplay() {
-  if (levelMax) {
-    ui.totalScore.textContent = `${session.totalScore} / ${levelMax}`;
-  } else {
-    ui.totalScore.textContent = session.totalScore;
-  }
-}
 
 function finalizeGame(status, message) {
   if (session.status !== 'in-progress') return;
@@ -279,6 +265,11 @@ function randomInt(min, max) {
 
 function formatMs(ms) {
   return (ms / 1000).toFixed(2);
+}
+
+function formatMsSigned(ms) {
+  const sign = ms >= 0 ? '+' : '-';
+  return `${sign}${formatMs(Math.abs(ms))}`;
 }
 
 function buildRoundLog(container) {
@@ -360,7 +351,8 @@ function createLampEngine(context) {
     clearTimeout(bulbTimeout);
     clearTimeout(failTimeout);
     const elapsed = stamp - startStamp;
-    const diff = Math.abs(elapsed - targetDelay);
+    const offset = elapsed - targetDelay;
+    const diff = Math.abs(offset);
     const allowed = profile.tolerance;
     const precision = Math.max(0, 1 - diff / (allowed * 2));
     const score = Math.round(precision * 120);
@@ -372,7 +364,9 @@ function createLampEngine(context) {
     completed += 1;
     onRoundProgress(completed, rounds);
     log.push(
-      `Раунд ${completed}: промах ${formatMs(diff)} c, очки ${score}${penalty ? `, штраф ${penalty}` : ''}`,
+      `Раунд ${completed}: промах ${formatMsSigned(offset)} c, очки ${score}${
+        penalty ? `, штраф ${penalty}` : ''
+      }`,
     );
     if (completed >= rounds) {
       finishLevel();
@@ -504,7 +498,8 @@ function createRunnerEngine(context) {
       rectRunner.top - rectGoal.top,
     );
     const withinGoal = dist < 60;
-    const diff = Math.abs(duration - targetDelay);
+    const offset = duration - targetDelay;
+    const diff = Math.abs(offset);
     const precision = withinGoal ? Math.max(0, 1 - diff / (profile.tolerance * 1.5)) : 0;
     const score = Math.round(precision * 150);
     if (!withinGoal) {
@@ -514,8 +509,8 @@ function createRunnerEngine(context) {
     completed += 1;
     onRoundProgress(completed, rounds);
     log.push(
-      `Забег ${completed}: ${withinGoal ? 'достигнута норка' : 'промах по траектории'}, промах ${formatMs(
-        diff,
+      `Забег ${completed}: ${withinGoal ? 'достигнута норка' : 'промах по траектории'}, промах ${formatMsSigned(
+        offset,
       )} c, очки ${score}`,
     );
     if (completed >= rounds) {
@@ -580,15 +575,16 @@ function createPulseEngine(context) {
       return;
     }
     waitingClick = false;
-    const diff = Math.abs(performance.now() - expectedStamp);
+    const offset = performance.now() - expectedStamp;
+    const diff = Math.abs(offset);
     const score = Math.round(Math.max(0, 1 - diff / (profile.tolerance * 1.2)) * 180);
     levelScore += onScore(score);
     target.classList.add('active');
     setTimeout(() => target.classList.remove('active'), 600);
-    info.textContent = `Промах ${formatMs(diff)} c · очки ${score}`;
+    info.textContent = `Промах ${formatMsSigned(offset)} c · очки ${score}`;
     completed += 1;
     onRoundProgress(completed, rounds);
-    log.push(`Прыжок ${completed}: промах ${formatMs(diff)} c, очки ${score}`);
+    log.push(`Прыжок ${completed}: промах ${formatMsSigned(offset)} c, очки ${score}`);
     if (completed >= rounds) {
       const average = levelScore / rounds;
       const success = completed === rounds && average >= 70;
