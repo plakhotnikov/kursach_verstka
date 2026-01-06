@@ -424,12 +424,9 @@ function createRunnerEngine(context) {
   goal.className = 'goal';
   const hint = document.createElement('p');
   hint.className = 'hint';
-  const button = document.createElement('button');
-  button.textContent = 'Подготовить забег';
-  button.className = 'primary';
   const log = buildRoundLog(playground);
 
-  playground.append(hint, button, track);
+  playground.append(hint, track);
   track.append(trackLine, runner, goal);
 
   let dragging = false;
@@ -441,7 +438,7 @@ function createRunnerEngine(context) {
     if (dragging) return;
     ready = true;
     targetDelay = randomBetween(2000, 4500);
-    hint.textContent = `Держите мышь ${formatMs(targetDelay)} c и бросьте в норку.`;
+    hint.textContent = `Таймер начнётся, когда возьмёте мышку. Нужно ${formatMs(targetDelay)} c.`;
     positionRunner(0.1);
     positionGoal(Math.random() * 0.6 + 0.3);
   }
@@ -468,6 +465,7 @@ function createRunnerEngine(context) {
     runner.classList.add('dragging');
     runner.setPointerCapture(event.pointerId);
     startStamp = performance.now();
+    hint.textContent = `Таймер пошёл. Нужно ${formatMs(targetDelay)} c.`;
   });
 
   runner.addEventListener('pointermove', (event) => {
@@ -521,11 +519,6 @@ function createRunnerEngine(context) {
       prepareRound();
     }
   }
-
-  button.addEventListener('click', () => {
-    prepareRound();
-    announce('Норка сменила позицию!');
-  });
 
   prepareRound();
 
