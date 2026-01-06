@@ -292,6 +292,7 @@ function createLampEngine(context) {
   let completed = 0;
   let levelScore = 0;
   let levelPenalty = 0;
+  const roundsLog = [];
   let active = false;
   let targetDelay = 0;
   let startStamp = 0;
@@ -312,6 +313,10 @@ function createLampEngine(context) {
   button.textContent = 'Запустить попытку';
   button.className = 'primary';
   const log = buildRoundLog(lamp);
+  const pushRoundLog = (entry) => {
+    roundsLog.push(entry);
+    log.push(entry);
+  };
 
   lamp.append(bulb, hint, target, button);
   board.appendChild(lamp);
@@ -363,7 +368,7 @@ function createLampEngine(context) {
     levelScore += onScore(score);
     completed += 1;
     onRoundProgress(completed, rounds);
-    log.push(
+    pushRoundLog(
       `Раунд ${completed}: промах ${formatMsSigned(offset)} c, очки ${score}${
         penalty ? `, штраф ${penalty}` : ''
       }`,
@@ -385,6 +390,7 @@ function createLampEngine(context) {
       success,
       rounds,
       completed,
+      roundsLog,
     });
   }
 
@@ -401,13 +407,14 @@ function createLampEngine(context) {
         penalty: levelPenalty,
         rounds,
         completed,
+        roundsLog,
       });
     },
   };
 }
 
 function createRunnerEngine(context) {
-  const { playground, profile, onScore, onPenalty, onRoundProgress, onComplete, announce } = context;
+  const { playground, profile, onScore, onPenalty, onRoundProgress, onComplete } = context;
   const rounds = randomInt(3, 5);
   onRoundProgress(0, rounds);
   let completed = 0;
@@ -425,6 +432,10 @@ function createRunnerEngine(context) {
   const hint = document.createElement('p');
   hint.className = 'hint';
   const log = buildRoundLog(playground);
+  const pushRoundLog = (entry) => {
+    roundsLog.push(entry);
+    log.push(entry);
+  };
 
   playground.append(hint, track);
   track.append(trackLine, runner, goal);
@@ -506,7 +517,7 @@ function createRunnerEngine(context) {
     levelScore += onScore(score);
     completed += 1;
     onRoundProgress(completed, rounds);
-    log.push(
+    pushRoundLog(
       `Забег ${completed}: ${withinGoal ? 'достигнута норка' : 'промах по траектории'}, промах ${formatMsSigned(
         offset,
       )} c, очки ${score}`,
@@ -514,7 +525,15 @@ function createRunnerEngine(context) {
     if (completed >= rounds) {
       const average = levelScore / rounds;
       const success = completed === rounds && average >= 65;
-      onComplete({ id: 'runner', success, rounds, completed, score: levelScore, penalty: levelPenalty });
+      onComplete({
+        id: 'runner',
+        success,
+        rounds,
+        completed,
+        score: levelScore,
+        penalty: levelPenalty,
+        roundsLog,
+      });
     } else {
       prepareRound();
     }
@@ -526,7 +545,15 @@ function createRunnerEngine(context) {
     abort(reason) {
       dragging = false;
       log.push(`Забег отменён: ${reason}`);
-      onComplete({ id: 'runner', success: false, rounds, completed, score: levelScore, penalty: levelPenalty });
+      onComplete({
+        id: 'runner',
+        success: false,
+        rounds,
+        completed,
+        score: levelScore,
+        penalty: levelPenalty,
+        roundsLog,
+      });
     },
   };
 }
@@ -541,6 +568,7 @@ function createPulseEngine(context) {
   let waitingClick = false;
   let expectedStamp = 0;
   let sequenceActive = false;
+  const roundsLog = [];
   const info = document.createElement('p');
   info.className = 'hint';
   const button = document.createElement('button');
@@ -551,6 +579,10 @@ function createPulseEngine(context) {
   const target = document.createElement('div');
   target.className = 'pulse-target';
   const log = buildRoundLog(playground);
+  const pushRoundLog = (entry) => {
+    roundsLog.push(entry);
+    log.push(entry);
+  };
 
   zone.append(target);
   playground.append(info, button, zone);
@@ -588,11 +620,19 @@ function createPulseEngine(context) {
       info.textContent = isFinal
         ? resultText
         : `${resultText} · Нажмите «Показать интервалы».`;
-      log.push(logText);
+      pushRoundLog(logText);
       if (isFinal) {
         const average = levelScore / rounds;
         const success = completed === rounds && average >= 70;
-        onComplete({ id: 'pulse', success, rounds, completed, score: levelScore, penalty: levelPenalty });
+        onComplete({
+          id: 'pulse',
+          success,
+          rounds,
+          completed,
+          score: levelScore,
+          penalty: levelPenalty,
+          roundsLog,
+        });
       }
     }, 1000);
   });
@@ -623,7 +663,15 @@ function createPulseEngine(context) {
     abort(reason) {
       waitingClick = false;
       log.push(`Серия остановлена: ${reason}`);
-      onComplete({ id: 'pulse', success: false, rounds, completed, score: levelScore, penalty: levelPenalty });
+      onComplete({
+        id: 'pulse',
+        success: false,
+        rounds,
+        completed,
+        score: levelScore,
+        penalty: levelPenalty,
+        roundsLog,
+      });
     },
   };
 }

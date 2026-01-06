@@ -35,6 +35,7 @@ function renderSummary(session) {
     summaryElements.penalty.textContent = 'Штрафы: 0';
     summaryElements.duration.textContent = 'Затраченное время: ?';
     summaryElements.status.textContent = 'Статус: нет данных';
+    renderRounds(null);
     return;
   }
 
@@ -49,6 +50,7 @@ function renderSummary(session) {
   const extra = session.message ? ` · ${session.message}` : '';
   const levelText = session.levelTitle ? ` · ${session.levelTitle}` : '';
   summaryElements.status.textContent = `Статус: ${statusLabel(session.status)}${levelText}${extra}`;
+  renderRounds(session.levelResult?.roundsLog);
 }
 
 function renderRating(records, listId) {
@@ -68,6 +70,23 @@ function renderRating(records, listId) {
     const right = document.createElement('span');
     right.textContent = `${record.score} очков · штраф ${record.penalty}`;
     item.append(left, right);
+    list.appendChild(item);
+  });
+}
+
+function renderRounds(records) {
+  const list = document.getElementById('rounds-list');
+  if (!list) return;
+  list.innerHTML = '';
+  if (!records || records.length === 0) {
+    const empty = document.createElement('li');
+    empty.textContent = 'Нет данных по раундам.';
+    list.appendChild(empty);
+    return;
+  }
+  records.forEach((entry) => {
+    const item = document.createElement('li');
+    item.textContent = entry;
     list.appendChild(item);
   });
 }

@@ -484,6 +484,25 @@ button.blink {
   gap: 0.2rem;
 }
 
+.rounds-summary {
+  margin-top: 1rem;
+}
+
+.rounds-list {
+  list-style: none;
+  padding-left: 0;
+  margin: 0.6rem 0 0;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.rounds-list li {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 0.6rem;
+  padding: 0.5rem 0.7rem;
+  font-size: 0.95rem;
+}
+
 .toast {
   position: fixed;
   bottom: 1.5rem;
