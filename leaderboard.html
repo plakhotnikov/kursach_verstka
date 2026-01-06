@@ -1,69 +1,69 @@
 <!DOCTYPE html>
 <html lang="ru">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>Координация по времени — Финал и рейтинг</title>
-    <link rel="stylesheet" href="styles/style.css" />
-  </head>
-  <body class="screen screen--rating">
-    <div class="noise"></div>
-    <header class="app-header">
-      <div>
+    <link rel="stylesheet" href="styles/style.css"/>
+</head>
+<body class="screen screen--rating">
+<div class="noise"></div>
+<header class="app-header">
+    <div>
         <p class="badge">Результаты</p>
         <h1>Финал &amp; таблица</h1>
-      </div>
-      <nav class="top-nav">
+    </div>
+    <nav class="top-nav">
         <a href="index.html">Главная страница</a>
         <a href="game.html">Начать заново</a>
-      </nav>
-    </header>
+    </nav>
+</header>
 
-    <main class="rating-grid">
-      <section class="card" id="session-summary">
+<main class="rating-grid">
+    <section class="card" id="session-summary">
         <h2>Последний результат</h2>
         <div class="summary">
-          <p id="summary-player">Игрок: —</p>
-          <p id="summary-score">Очки: 0</p>
-          <p id="summary-penalty">Штрафы: 0</p>
-          <p id="summary-duration">Затраченное время: —</p>
-          <p id="summary-status">Статус: —</p>
+            <p id="summary-player">Игрок: —</p>
+            <p id="summary-score">Очки: 0</p>
+            <p id="summary-penalty">Штрафы: 0</p>
+            <p id="summary-duration">Затраченное время: —</p>
+            <p id="summary-status">Статус: —</p>
         </div>
         <div class="summary-actions">
-          <button id="restart-btn" class="primary">На главную страницу</button>
+            <button id="restart-btn" class="primary">На главную страницу</button>
         </div>
         <div class="rounds-summary">
-          <h3>Раунды</h3>
-          <ol id="rounds-list" class="rounds-list"></ol>
+            <h3>Раунды</h3>
+            <ol id="rounds-list" class="rounds-list"></ol>
         </div>
-      </section>
+    </section>
 
-      <div class="rating-row">
+    <div class="rating-row">
         <section class="card card--info">
-          <h2>Импульс лампы</h2>
-          <ol id="rating-lamp" class="rating-list"></ol>
+            <h2>Импульс лампы</h2>
+            <ol id="rating-lamp" class="rating-list"></ol>
         </section>
 
         <section class="card card--info">
-          <h2>Мышь и тоннель</h2>
-          <ol id="rating-runner" class="rating-list"></ol>
+            <h2>Мышь и тоннель</h2>
+            <ol id="rating-runner" class="rating-list"></ol>
         </section>
 
         <section class="card card--info">
-          <h2>Прыгун по таймеру</h2>
-          <ol id="rating-pulse" class="rating-list"></ol>
+            <h2>Прыгун по таймеру</h2>
+            <ol id="rating-pulse" class="rating-list"></ol>
         </section>
-      </div>
-    </main>
+    </div>
+</main>
 
-    <footer class="app-footer">
-      <p>
+<footer class="app-footer">
+    <p>
         Данные хранятся локально (LocalStorage). Чтобы очистить историю,
         используйте кнопку ниже.
-      </p>
-      <button id="clear-rating" class="ghost">Стереть рейтинг</button>
-    </footer>
+    </p>
+    <button id="clear-rating" class="ghost">Стереть рейтинг</button>
+</footer>
 
-    <script type="module" src="scripts/results.js"></script>
-  </body>
+<script type="module" src="scripts/results.js"></script>
+</body>
 </html>

@@ -1,25 +1,25 @@
-import { storage } from './storage.js';
+import {storage} from './storage.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-  const form = document.getElementById('start-form');
-  const existing = storage.getCurrentPlayer();
+    const form = document.getElementById('start-form');
+    const existing = storage.getCurrentPlayer();
 
-  if (existing) {
-    form.playerName.value = existing.name;
-    form.levelId.value = existing.levelId || 'lamp';
-  }
+    if (existing) {
+        form.playerName.value = existing.name;
+        form.levelId.value = existing.levelId || 'lamp';
+    }
 
-  form.addEventListener('submit', (event) => {
-    event.preventDefault();
-    const formData = new FormData(form);
-    const payload = {
-      name: formData.get('playerName').trim(),
-      levelId: formData.get('levelId'),
-      createdAt: Date.now(),
-    };
+    form.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const formData = new FormData(form);
+        const payload = {
+            name: formData.get('playerName').trim(),
+            levelId: formData.get('levelId'),
+            createdAt: Date.now(),
+        };
 
-    storage.saveCurrentPlayer(payload);
-    storage.saveSession(null);
-    window.location.href = 'game.html';
-  });
+        storage.saveCurrentPlayer(payload);
+        storage.saveSession(null);
+        window.location.href = 'game.html';
+    });
 });
