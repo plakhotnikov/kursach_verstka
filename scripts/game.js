@@ -68,7 +68,6 @@ let session = {
 let currentEngine = null;
 let globalTimerId = null;
 let timeLeft = profile.globalTime;
-let restartRequested = false;
 
 ui.playerName.textContent = `${player.name}`;
 ui.levelLabel.textContent = selectedLevel.title;
@@ -80,8 +79,7 @@ ui.totalScore.textContent = session.totalScore;
 
 ui.startLevelBtn.addEventListener('click', () => {
   if (currentEngine) {
-    restartRequested = true;
-    currentEngine.abort('Перезапуск уровня.');
+    window.location.reload();
     return;
   }
   startSelectedLevel();
@@ -157,17 +155,7 @@ function handleLevelComplete(result) {
   } else {
     if (result.score) {
       session.totalScore = Math.max(0, session.totalScore - result.score);
-      updateScoreDisplay();
-    }
-    if (restartRequested) {
-      restartRequested = false;
-      currentEngine = null;
-      ui.startLevelBtn.disabled = false;
-      ui.startLevelBtn.textContent = 'Запустить уровень';
-      ui.skipLevelBtn.disabled = true;
-      announce(`Уровень «${selectedLevel.title}» перезапущен.`);
-      startSelectedLevel();
-      return;
+      ui.totalScore.textContent = session.totalScore;
     }
     announce(`Недостаточно очков на уровне «${selectedLevel.title}». Попробуйте снова.`);
     currentEngine = null;
