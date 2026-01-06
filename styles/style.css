@@ -142,6 +142,15 @@ p {
   color: inherit;
 }
 
+/*.start-form select {*/
+/*  color: inherit;*/
+/*}*/
+
+.start-form select option {
+  color: #000;
+  background: #fff;
+}
+
 .start-form input:focus,
 .start-form select:focus,
 .playground button:focus-visible {
