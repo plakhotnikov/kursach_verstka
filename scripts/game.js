@@ -214,7 +214,7 @@ function finalizeGame(status, message) {
       date: new Date().toISOString(),
     });
   }
-  window.location.href = 'leaderboard.html';
+  window.location.href = 'leaderboard.html?from=game';
 }
 
 function announce(text) {

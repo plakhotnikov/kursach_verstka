@@ -1,9 +1,11 @@
 import { storage } from './storage.js';
 
 document.addEventListener('DOMContentLoaded', () => {
+  const params = new URLSearchParams(window.location.search);
+  const fromGame = params.get('from') === 'game';
   const session = storage.getSession();
   const rating = storage.getRating();
-  renderSummary(session);
+  renderSummary(fromGame ? session : null);
   renderRating(rating.lamp, 'rating-lamp');
   renderRating(rating.runner, 'rating-runner');
   renderRating(rating.pulse, 'rating-pulse');
@@ -21,6 +23,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function renderSummary(session) {
+  const summaryBlock = document.getElementById('session-summary');
   const summaryElements = {
     player: document.getElementById('summary-player'),
     score: document.getElementById('summary-score'),
@@ -30,6 +33,7 @@ function renderSummary(session) {
   };
 
   if (!session) {
+    if (summaryBlock) summaryBlock.style.display = 'none';
     summaryElements.player.textContent = 'Игрок: —';
     summaryElements.score.textContent = 'Очки: 0';
     summaryElements.penalty.textContent = 'Штрафы: 0';
@@ -38,6 +42,7 @@ function renderSummary(session) {
     renderRounds(null);
     return;
   }
+  if (summaryBlock) summaryBlock.style.display = '';
 
   const spent = session.finishedAt
     ? Math.round((session.finishedAt - session.startedAt) / 1000)
