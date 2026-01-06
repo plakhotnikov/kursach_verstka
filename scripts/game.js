@@ -540,6 +540,7 @@ function createPulseEngine(context) {
   let levelPenalty = 0;
   let waitingClick = false;
   let expectedStamp = 0;
+  let sequenceActive = false;
   const info = document.createElement('p');
   info.className = 'hint';
   const button = document.createElement('button');
@@ -557,7 +558,7 @@ function createPulseEngine(context) {
   info.textContent = 'Наблюдайте за вспышками, затем двойной клик.';
 
   button.addEventListener('click', () => {
-    if (waitingClick) return;
+    if (waitingClick || sequenceActive) return;
     startPulse();
   });
 
@@ -568,27 +569,38 @@ function createPulseEngine(context) {
       return;
     }
     waitingClick = false;
+    sequenceActive = false;
     const offset = performance.now() - expectedStamp;
     const diff = Math.abs(offset);
     const score = Math.round(Math.max(0, 1 - diff / (profile.tolerance * 1.2)) * 180);
     levelScore += onScore(score);
     target.classList.add('active');
-    setTimeout(() => target.classList.remove('active'), 600);
-    info.textContent = `Промах ${formatMsSigned(offset)} c · очки ${score}`;
+    setTimeout(() => target.classList.remove('active'), 450);
     completed += 1;
     onRoundProgress(completed, rounds);
-    log.push(`Прыжок ${completed}: промах ${formatMsSigned(offset)} c, очки ${score}`);
-    if (completed >= rounds) {
-      const average = levelScore / rounds;
-      const success = completed === rounds && average >= 70;
-      onComplete({ id: 'pulse', success, rounds, completed, score: levelScore, penalty: levelPenalty });
-    } else {
-      startPulse();
-    }
+    button.disabled = false;
+    button.classList.add('blink');
+    setTimeout(() => button.classList.remove('blink'), 600);
+    const resultText = `Промах ${formatMsSigned(offset)} c · очки ${score}`;
+    const logText = `Прыжок ${completed}: промах ${formatMsSigned(offset)} c, очки ${score}`;
+    const isFinal = completed >= rounds;
+    setTimeout(() => {
+      info.textContent = isFinal
+        ? resultText
+        : `${resultText} · Нажмите «Показать интервалы».`;
+      log.push(logText);
+      if (isFinal) {
+        const average = levelScore / rounds;
+        const success = completed === rounds && average >= 70;
+        onComplete({ id: 'pulse', success, rounds, completed, score: levelScore, penalty: levelPenalty });
+      }
+    }, 1000);
   });
 
   function startPulse() {
     waitingClick = false;
+    sequenceActive = true;
+    button.disabled = true;
     target.classList.remove('active');
     const delay = randomBetween(1200, 2600);
     const width = Math.max(160, zone.clientWidth - 140);
