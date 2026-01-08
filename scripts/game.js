@@ -63,6 +63,7 @@ const ui = {
     exitBtn: document.getElementById('exit-btn'),
     playground: document.getElementById('playground'),
     totalScore: document.getElementById('total-score'),
+    levelScore: document.getElementById('level-score'),
     penaltyScore: document.getElementById('penalty-score'),
     roundProgress: document.getElementById('round-progress'),
     timer: document.getElementById('global-timer'),
@@ -85,6 +86,7 @@ let levelIndex = -1;
 let currentEngine = null;
 let globalTimerId = null;
 let timeLeft = profile.globalTime;
+let currentLevelScore = 0;
 
 ui.playerName.textContent = `${player.name} · ${profile.label}`;
 ui.levelLabel.textContent = 'Не начато';
@@ -129,6 +131,8 @@ function startNextLevel() {
     ui.startLevelBtn.disabled = true;
     ui.skipLevelBtn.disabled = false;
     ui.roundProgress.style.width = '0%';
+    currentLevelScore = 0;
+    ui.levelScore.textContent = currentLevelScore;
     ui.playground.innerHTML = '';
     spawnFloaters(profile.distraction);
 
@@ -153,6 +157,8 @@ function onScore(points) {
     const awarded = Math.max(0, Math.round(points));
     session.totalScore += awarded;
     ui.totalScore.textContent = session.totalScore;
+    currentLevelScore += awarded;
+    ui.levelScore.textContent = currentLevelScore;
     return awarded;
 }
 
@@ -162,6 +168,8 @@ function applyPenalty(value) {
     ui.penaltyScore.textContent = session.penalties;
     session.totalScore = Math.max(0, session.totalScore - Math.round(penalty / 2));
     ui.totalScore.textContent = session.totalScore;
+    currentLevelScore = Math.max(0, currentLevelScore - Math.round(penalty / 2));
+    ui.levelScore.textContent = currentLevelScore;
     return penalty;
 }
 
@@ -175,14 +183,20 @@ function handleLevelComplete(result) {
         ui.startLevelBtn.textContent =
             levelIndex + 1 >= levels.length ? 'Завершить!' : 'Следующий уровень';
         ui.skipLevelBtn.disabled = true;
-    if (levelIndex + 1 >= levels.length) {
-        finalizeGame('completed', 'Все уровни пройдены.');
-    }
-  } else {
-    announce(`Недостаточно очков на уровне «${levels[levelIndex].title}». Попробуйте снова.`);
-    currentEngine = null;
-    ui.startLevelBtn.disabled = false;
-    ui.skipLevelBtn.disabled = true;
+        if (levelIndex + 1 >= levels.length) {
+            finalizeGame('completed', 'Все уровни пройдены.');
+        }
+    } else {
+        if (currentLevelScore > 0) {
+            session.totalScore = Math.max(0, session.totalScore - currentLevelScore);
+            currentLevelScore = 0;
+            ui.totalScore.textContent = session.totalScore;
+            ui.levelScore.textContent = currentLevelScore;
+        }
+        announce(`Недостаточно очков на уровне «${levels[levelIndex].title}». Попробуйте снова.`);
+        currentEngine = null;
+        ui.startLevelBtn.disabled = false;
+        ui.skipLevelBtn.disabled = true;
         ui.startLevelBtn.textContent = 'Повторить уровень';
         levelIndex -= 1;
     }
