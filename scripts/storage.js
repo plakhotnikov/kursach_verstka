@@ -5,9 +5,9 @@ const STORAGE_KEYS = {
 };
 
 const defaultRating = {
-    lamp: [],
-    runner: [],
-    pulse: [],
+    calm: [],
+    steady: [],
+    rush: [],
 };
 
 const safeParse = (value, fallback) => {
@@ -39,9 +39,9 @@ export const storage = {
         const stored = safeParse(localStorage.getItem(STORAGE_KEYS.rating), defaultRating);
         if (Array.isArray(stored)) {
             return {
-                lamp: stored,
-                runner: [],
-                pulse: [],
+                calm: stored,
+                steady: [],
+                rush: [],
             };
         }
         return {
@@ -49,13 +49,13 @@ export const storage = {
             ...stored,
         };
     },
-    pushRating(levelId, entry) {
+    pushRating(difficulty, entry) {
         const rating = this.getRating();
-        const bucket = rating[levelId] || [];
-        const enriched = {...entry, levelId};
+        const bucket = rating[difficulty] || [];
+        const enriched = {...entry, difficulty};
         bucket.push(enriched);
         bucket.sort((a, b) => b.score - a.score || a.penalty - b.penalty);
-        rating[levelId] = bucket.slice(0, 20);
+        rating[difficulty] = bucket.slice(0, 20);
         localStorage.setItem(STORAGE_KEYS.rating, JSON.stringify(rating));
     },
     clearRating() {

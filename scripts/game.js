@@ -5,11 +5,28 @@ if (!player) {
     window.location.replace('index.html');
 }
 
-const baseProfile = {
-    globalTime: 60,
-    tolerance: 750,
-    penaltyFactor: 20,
-    distraction: 5,
+const difficultyProfiles = {
+    calm: {
+        label: 'Разминка',
+        globalTime: 210,
+        tolerance: 900,
+        penaltyFactor: 15,
+        distraction: 3,
+    },
+    steady: {
+        label: 'Стандарт',
+        globalTime: 180,
+        tolerance: 750,
+        penaltyFactor: 20,
+        distraction: 5,
+    },
+    rush: {
+        label: 'Штурм',
+        globalTime: 150,
+        tolerance: 600,
+        penaltyFactor: 25,
+        distraction: 7,
+    },
 };
 
 const levels = [
@@ -51,45 +68,42 @@ const ui = {
     timer: document.getElementById('global-timer'),
 };
 
-const selectedLevel = levels.find((item) => item.id === player?.levelId) || levels[0];
-const profile = baseProfile;
+const profile = difficultyProfiles[player?.difficulty] || difficultyProfiles.steady;
 
 let session = {
     playerName: player.name,
-    levelId: selectedLevel.id,
-    levelTitle: selectedLevel.title,
+    difficulty: player.difficulty,
+    difficultyLabel: profile.label,
     totalScore: 0,
     penalties: 0,
     startedAt: Date.now(),
-    levelResult: null,
+    levelResults: [],
     status: 'in-progress',
 };
 
+let levelIndex = -1;
 let currentEngine = null;
 let globalTimerId = null;
 let timeLeft = profile.globalTime;
 
-ui.playerName.textContent = `${player.name}`;
-ui.levelLabel.textContent = selectedLevel.title;
+ui.playerName.textContent = `${player.name} · ${profile.label}`;
+ui.levelLabel.textContent = 'Не начато';
 ui.startLevelBtn.disabled = false;
 ui.skipLevelBtn.disabled = true;
-ui.levelTitle.textContent = selectedLevel.title;
-ui.levelDescription.textContent = selectedLevel.description;
+ui.levelTitle.textContent = 'Подготовка';
+ui.levelDescription.textContent = 'Вы ещё не начали. Пройдите уровни по очереди.';
 ui.totalScore.textContent = session.totalScore;
 
 ui.startLevelBtn.addEventListener('click', () => {
-    if (currentEngine) {
-        window.location.reload();
-        return;
-    }
-    startSelectedLevel();
+    if (currentEngine) return;
+    startNextLevel();
 });
 
 ui.skipLevelBtn.addEventListener('click', () => {
     if (!currentEngine) return;
     currentEngine.abort('Игрок остановил уровень.');
     applyPenalty(profile.penaltyFactor * 2);
-    announce(`Уровень «${selectedLevel.title}» остановлен.`);
+    announce(`Уровень «${levels[levelIndex].title}» остановлен.`);
 });
 
 ui.exitBtn.addEventListener('click', () => {
@@ -100,11 +114,20 @@ spawnFloaters(profile.distraction + 2);
 startGlobalTimer();
 setupBeforeUnload();
 
-function startSelectedLevel() {
+function startNextLevel() {
     if (currentEngine) return;
-    ui.startLevelBtn.disabled = false;
+    levelIndex += 1;
+    if (levelIndex >= levels.length) {
+        finalizeGame('completed', 'Все уровни успешно завершены.');
+        return;
+    }
+
+    const definition = levels[levelIndex];
+    ui.levelLabel.textContent = `${levelIndex + 1} / ${levels.length}`;
+    ui.levelTitle.textContent = definition.title;
+    ui.levelDescription.textContent = definition.description;
+    ui.startLevelBtn.disabled = true;
     ui.skipLevelBtn.disabled = false;
-    ui.startLevelBtn.textContent = 'Перезапуск';
     ui.roundProgress.style.width = '0%';
     ui.playground.innerHTML = '';
     spawnFloaters(profile.distraction);
@@ -118,7 +141,7 @@ function startSelectedLevel() {
         onComplete: handleLevelComplete,
     };
 
-    currentEngine = selectedLevel.build(context);
+    currentEngine = definition.build(context);
 }
 
 function updateProgress(done, total) {
@@ -143,24 +166,25 @@ function applyPenalty(value) {
 }
 
 function handleLevelComplete(result) {
-    session.levelResult = result;
+    result.title = levels[levelIndex].title;
+    session.levelResults[levelIndex] = result;
     if (result.success) {
-        announce(`Уровень «${selectedLevel.title}» пройден.`);
+        announce(`Уровень «${levels[levelIndex].title}» пройден.`);
         currentEngine = null;
         ui.startLevelBtn.disabled = false;
-        ui.startLevelBtn.textContent = 'Запустить уровень';
+        ui.startLevelBtn.textContent =
+            levelIndex + 1 >= levels.length ? 'Завершить!' : 'Следующий уровень';
         ui.skipLevelBtn.disabled = true;
-        finalizeGame('completed', 'Уровень успешно завершён.');
-    } else {
-        if (result.score) {
-            session.totalScore = Math.max(0, session.totalScore - result.score);
-            ui.totalScore.textContent = session.totalScore;
-        }
-        announce(`Недостаточно очков на уровне «${selectedLevel.title}». Попробуйте снова.`);
-        currentEngine = null;
-        ui.startLevelBtn.disabled = false;
-        ui.skipLevelBtn.disabled = true;
+    if (levelIndex + 1 >= levels.length) {
+        finalizeGame('completed', 'Все уровни пройдены.');
+    }
+  } else {
+    announce(`Недостаточно очков на уровне «${levels[levelIndex].title}». Попробуйте снова.`);
+    currentEngine = null;
+    ui.startLevelBtn.disabled = false;
+    ui.skipLevelBtn.disabled = true;
         ui.startLevelBtn.textContent = 'Повторить уровень';
+        levelIndex -= 1;
     }
 }
 
@@ -193,7 +217,7 @@ function finalizeGame(status, message) {
     session.message = message;
     storage.saveSession(session);
     if (status === 'completed') {
-        storage.pushRating(session.levelId, {
+        storage.pushRating(session.difficulty || 'steady', {
             name: session.playerName,
             score: session.totalScore,
             penalty: session.penalties,
@@ -276,15 +300,16 @@ function createLampEngine(context) {
     const {playground, profile, onScore, onPenalty, onRoundProgress, onComplete} = context;
     const rounds = randomInt(3, 5);
     onRoundProgress(0, rounds);
-    let completed = 0;
-    let levelScore = 0;
-    let levelPenalty = 0;
-    const roundsLog = [];
-    let active = false;
-    let targetDelay = 0;
-    let startStamp = 0;
-    let bulbTimeout;
-    let failTimeout;
+  let completed = 0;
+  let levelScore = 0;
+  let levelPenalty = 0;
+  const roundsLog = [];
+  let active = false;
+  let finished = false;
+  let targetDelay = 0;
+  let startStamp = 0;
+  let bulbTimeout;
+  let failTimeout;
     const board = document.createElement('div');
     board.className = 'lamp-board';
     const lamp = document.createElement('div');
@@ -311,9 +336,9 @@ function createLampEngine(context) {
 
     hint.textContent = 'Запустите попытку, дождитесь вспышки и жмите пробел.';
 
-    function startRound() {
-        if (active) return;
-        active = true;
+  function startRound() {
+    if (active || finished) return;
+    active = true;
         targetDelay = randomBetween(1500, 3500);
         startStamp = performance.now();
         hint.textContent = 'Сфокусируйтесь. Вспышка будет скоро.';
@@ -337,9 +362,9 @@ function createLampEngine(context) {
         concludeRound(performance.now());
     }
 
-    function concludeRound(stamp) {
-        active = false;
-        document.removeEventListener('keydown', handlePress);
+  function concludeRound(stamp) {
+    active = false;
+    document.removeEventListener('keydown', handlePress);
         clearTimeout(bulbTimeout);
         clearTimeout(failTimeout);
         const elapsed = stamp - startStamp;
@@ -360,18 +385,20 @@ function createLampEngine(context) {
                 penalty ? `, штраф ${penalty}` : ''
             }`,
         );
-        if (completed >= rounds) {
-            finishLevel();
-        }
+    if (completed >= rounds) {
+      finishLevel();
     }
+  }
 
     button.addEventListener('click', startRound);
 
-    function finishLevel() {
-        const average = completed ? levelScore / completed : 0;
-        const success = completed === rounds && average >= 60;
-        onComplete({
-            id: 'lamp',
+  function finishLevel() {
+    finished = true;
+    button.disabled = true;
+    const average = completed ? levelScore / completed : 0;
+    const success = completed === rounds && average >= 60;
+    onComplete({
+      id: 'lamp',
             score: levelScore,
             penalty: levelPenalty,
             success,
@@ -381,12 +408,14 @@ function createLampEngine(context) {
         });
     }
 
-    return {
-        abort(reason) {
-            document.removeEventListener('keydown', handlePress);
-            clearTimeout(bulbTimeout);
-            clearTimeout(failTimeout);
-            log.push(`Рунд остановлен: ${reason}`);
+  return {
+    abort(reason) {
+      finished = true;
+      button.disabled = true;
+      document.removeEventListener('keydown', handlePress);
+      clearTimeout(bulbTimeout);
+      clearTimeout(failTimeout);
+      log.push(`Рунд остановлен: ${reason}`);
             onComplete({
                 id: 'lamp',
                 success: false,
@@ -404,11 +433,12 @@ function createRunnerEngine(context) {
     const {playground, profile, onScore, onPenalty, onRoundProgress, onComplete} = context;
     const rounds = randomInt(3, 5);
     onRoundProgress(0, rounds);
-    let completed = 0;
-    let levelScore = 0;
-    let levelPenalty = 0;
-    const roundsLog = [];
-    const track = document.createElement('div');
+  let completed = 0;
+  let levelScore = 0;
+  let levelPenalty = 0;
+  const roundsLog = [];
+  let finished = false;
+  const track = document.createElement('div');
     track.className = 'track';
     const trackLine = document.createElement('div');
     trackLine.className = 'track__line';
@@ -433,9 +463,9 @@ function createRunnerEngine(context) {
     let startStamp = 0;
     let ready = false;
 
-    function prepareRound() {
-        if (dragging) return;
-        ready = true;
+  function prepareRound() {
+    if (dragging || finished) return;
+    ready = true;
         targetDelay = randomBetween(2000, 4500);
         hint.textContent = `Таймер начнётся, когда возьмёте мышку. Нужно ${formatMs(targetDelay)} c.`;
         positionRunner(0.1);
@@ -457,9 +487,9 @@ function createRunnerEngine(context) {
         goal.style.top = `calc(50% + ${yOffset}px)`;
     }
 
-    runner.addEventListener('pointerdown', (event) => {
-        if (!ready) return;
-        event.preventDefault(); // отключаем выделение текста при перетаскивании
+  runner.addEventListener('pointerdown', (event) => {
+    if (!ready || finished) return;
+    event.preventDefault(); // отключаем выделение текста при перетаскивании
         dragging = true;
         runner.classList.add('dragging');
         runner.setPointerCapture(event.pointerId);
@@ -467,8 +497,8 @@ function createRunnerEngine(context) {
         hint.textContent = `Таймер пошёл. Нужно ${formatMs(targetDelay)} c.`;
     });
 
-    runner.addEventListener('pointermove', (event) => {
-        if (!dragging) return;
+  runner.addEventListener('pointermove', (event) => {
+    if (!dragging || finished) return;
         const rect = track.getBoundingClientRect();
         const relX = clamp(event.clientX - rect.left, 30, rect.width - 30);
         const relY = clamp(event.clientY - rect.top, 20, rect.height - 20);
@@ -476,8 +506,8 @@ function createRunnerEngine(context) {
         runner.style.top = `${relY}px`;
     });
 
-    runner.addEventListener('pointerup', (event) => {
-        if (!dragging) return;
+  runner.addEventListener('pointerup', (event) => {
+    if (!dragging || finished) return;
         dragging = false;
         ready = false;
         runner.classList.remove('dragging');
@@ -510,10 +540,13 @@ function createRunnerEngine(context) {
                 offset,
             )} c, очки ${score}`,
         );
-        if (completed >= rounds) {
-            const average = levelScore / rounds;
-            const success = completed === rounds && average >= 65;
-            onComplete({
+    if (completed >= rounds) {
+      finished = true;
+      ready = false;
+      runner.style.pointerEvents = 'none';
+      const average = levelScore / rounds;
+      const success = completed === rounds && average >= 65;
+      onComplete({
                 id: 'runner',
                 success,
                 rounds,
@@ -529,10 +562,13 @@ function createRunnerEngine(context) {
 
     prepareRound();
 
-    return {
-        abort(reason) {
-            dragging = false;
-            log.push(`Забег отменён: ${reason}`);
+  return {
+    abort(reason) {
+      finished = true;
+      ready = false;
+      runner.style.pointerEvents = 'none';
+      dragging = false;
+      log.push(`Забег отменён: ${reason}`);
             onComplete({
                 id: 'runner',
                 success: false,
@@ -551,12 +587,13 @@ function createPulseEngine(context) {
     const rounds = randomInt(3, 5);
     onRoundProgress(0, rounds);
     let completed = 0;
-    let levelScore = 0;
-    let levelPenalty = 0;
-    let waitingClick = false;
-    let expectedStamp = 0;
-    let sequenceActive = false;
-    const roundsLog = [];
+  let levelScore = 0;
+  let levelPenalty = 0;
+  let waitingClick = false;
+  let expectedStamp = 0;
+  let sequenceActive = false;
+  const roundsLog = [];
+  let finished = false;
     const info = document.createElement('p');
     info.className = 'hint';
     const button = document.createElement('button');
@@ -577,17 +614,17 @@ function createPulseEngine(context) {
 
     info.textContent = 'Наблюдайте за вспышками, затем двойной клик.';
 
-    button.addEventListener('click', () => {
-        if (waitingClick || sequenceActive) return;
-        startPulse();
-    });
+  button.addEventListener('click', () => {
+    if (waitingClick || sequenceActive || finished) return;
+    startPulse();
+  });
 
-    target.addEventListener('dblclick', () => {
-        if (!waitingClick) {
-            levelPenalty += onPenalty(profile.penaltyFactor / 2);
-            log.push('Двойной клик слишком рано.');
-            return;
-        }
+  target.addEventListener('dblclick', () => {
+    if (!waitingClick || finished) {
+      levelPenalty += onPenalty(profile.penaltyFactor / 2);
+      log.push('Двойной клик слишком рано.');
+      return;
+    }
         waitingClick = false;
         sequenceActive = false;
         const offset = performance.now() - expectedStamp;
@@ -609,10 +646,13 @@ function createPulseEngine(context) {
                 ? resultText
                 : `${resultText} · Нажмите «Показать интервалы».`;
             pushRoundLog(logText);
-            if (isFinal) {
-                const average = levelScore / rounds;
-                const success = completed === rounds && average >= 70;
-                onComplete({
+      if (isFinal) {
+        finished = true;
+        button.disabled = true;
+        target.style.pointerEvents = 'none';
+        const average = levelScore / rounds;
+        const success = completed === rounds && average >= 70;
+        onComplete({
                     id: 'pulse',
                     success,
                     rounds,
@@ -625,11 +665,12 @@ function createPulseEngine(context) {
         }, 1000);
     });
 
-    function startPulse() {
-        waitingClick = false;
-        sequenceActive = true;
-        button.disabled = true;
-        target.classList.remove('active');
+  function startPulse() {
+    waitingClick = false;
+    if (finished) return;
+    sequenceActive = true;
+    button.disabled = true;
+    target.classList.remove('active');
         const delay = randomBetween(1200, 2600);
         const width = Math.max(160, zone.clientWidth - 140);
         const height = Math.max(160, zone.clientHeight - 140);
@@ -647,10 +688,13 @@ function createPulseEngine(context) {
         }, delay);
     }
 
-    return {
-        abort(reason) {
-            waitingClick = false;
-            log.push(`Серия остановлена: ${reason}`);
+  return {
+    abort(reason) {
+      finished = true;
+      button.disabled = true;
+      target.style.pointerEvents = 'none';
+      waitingClick = false;
+      log.push(`Серия остановлена: ${reason}`);
             onComplete({
                 id: 'pulse',
                 success: false,

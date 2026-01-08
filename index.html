@@ -26,8 +26,8 @@
     <section class="card" aria-labelledby="start-title">
         <h2 id="start-title">Мини-авторизация</h2>
         <p>
-            Введите ваше имя и выберите тип задания. Настройки сохранятся на этом
-            устройстве, чтобы можно было продолжить позже.
+          Введите ваше имя и выберите стартовое ускорение. Настройки сохранятся на
+          этом устройстве, чтобы можно было продолжить позже.
         </p>
         <form id="start-form" class="start-form">
             <label>
@@ -41,15 +41,15 @@
                         maxlength="24"
                         placeholder="Например, Ася"
                 />
-            </label>
-            <label>
-                Тип задания
-                <select name="levelId" required>
-                    <option value="lamp">Импульс лампы</option>
-                    <option value="runner">Мышь и тоннель</option>
-                    <option value="pulse">Прыгун по таймеру</option>
-                </select>
-            </label>
+          </label>
+          <label>
+            Сложность (ускорение)
+            <select name="difficulty" required>
+              <option value="calm">Разминка (спокойный ритм)</option>
+              <option value="steady">Стандарт (базовый ритм)</option>
+              <option value="rush">Штурм (ускорение)</option>
+            </select>
+          </label>
             <button type="submit" class="primary">Начать игру</button>
         </form>
     </section>

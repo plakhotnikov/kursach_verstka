@@ -4,19 +4,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('start-form');
     const existing = storage.getCurrentPlayer();
 
-    if (existing) {
-        form.playerName.value = existing.name;
-        form.levelId.value = existing.levelId || 'lamp';
-    }
+  if (existing) {
+    form.playerName.value = existing.name;
+    form.difficulty.value = existing.difficulty || 'steady';
+  }
 
     form.addEventListener('submit', (event) => {
         event.preventDefault();
         const formData = new FormData(form);
-        const payload = {
-            name: formData.get('playerName').trim(),
-            levelId: formData.get('levelId'),
-            createdAt: Date.now(),
-        };
+    const payload = {
+      name: formData.get('playerName').trim(),
+      difficulty: formData.get('difficulty'),
+      createdAt: Date.now(),
+    };
 
         storage.saveCurrentPlayer(payload);
         storage.saveSession(null);

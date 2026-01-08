@@ -1,14 +1,14 @@
 import {storage} from './storage.js';
 
 document.addEventListener('DOMContentLoaded', () => {
-    const params = new URLSearchParams(window.location.search);
-    const fromGame = params.get('from') === 'game';
-    const session = storage.getSession();
-    const rating = storage.getRating();
-    renderSummary(fromGame ? session : null);
-    renderRating(rating.lamp, 'rating-lamp');
-    renderRating(rating.runner, 'rating-runner');
-    renderRating(rating.pulse, 'rating-pulse');
+  const params = new URLSearchParams(window.location.search);
+  const fromGame = params.get('from') === 'game';
+  const session = storage.getSession();
+  const rating = storage.getRating();
+  renderSummary(fromGame ? session : null);
+  renderRating(rating.calm, 'rating-calm');
+  renderRating(rating.steady, 'rating-steady');
+  renderRating(rating.rush, 'rating-rush');
 
     document.getElementById('restart-btn').addEventListener('click', () => {
         window.location.href = 'index.html';
@@ -50,12 +50,12 @@ function renderSummary(session) {
 
     summaryElements.player.textContent = `Игрок: ${session.playerName || '—'}`;
     summaryElements.score.textContent = `Очки: ${session.totalScore}`;
-    summaryElements.penalty.textContent = `Штрафы: ${session.penalties}`;
-    summaryElements.duration.textContent = `Затраченное время: ${formatSeconds(spent)}`;
-    const extra = session.message ? ` · ${session.message}` : '';
-    const levelText = session.levelTitle ? ` · ${session.levelTitle}` : '';
-    summaryElements.status.textContent = `Статус: ${statusLabel(session.status)}${levelText}${extra}`;
-    renderRounds(session.levelResult?.roundsLog);
+  summaryElements.penalty.textContent = `Штрафы: ${session.penalties}`;
+  summaryElements.duration.textContent = `Затраченное время: ${formatSeconds(spent)}`;
+  const extra = session.message ? ` · ${session.message}` : '';
+  const difficultyText = session.difficultyLabel ? ` · ${session.difficultyLabel}` : '';
+  summaryElements.status.textContent = `Статус: ${statusLabel(session.status)}${difficultyText}${extra}`;
+  renderRounds(session.levelResults);
 }
 
 function renderRating(records, listId) {
@@ -80,20 +80,27 @@ function renderRating(records, listId) {
 }
 
 function renderRounds(records) {
-    const list = document.getElementById('rounds-list');
-    if (!list) return;
-    list.innerHTML = '';
-    if (!records || records.length === 0) {
-        const empty = document.createElement('li');
-        empty.textContent = 'Нет данных по раундам.';
-        list.appendChild(empty);
-        return;
-    }
-    records.forEach((entry) => {
-        const item = document.createElement('li');
-        item.textContent = entry;
-        list.appendChild(item);
+  const list = document.getElementById('rounds-list');
+  if (!list) return;
+  list.innerHTML = '';
+  if (!records || records.length === 0) {
+    const empty = document.createElement('li');
+    empty.textContent = 'Нет данных по раундам.';
+    list.appendChild(empty);
+    return;
+  }
+  records.forEach((result, index) => {
+    if (!result || !result.roundsLog || result.roundsLog.length === 0) return;
+    const heading = document.createElement('li');
+    const title = result.title || `Уровень ${index + 1}`;
+    heading.textContent = `${title}:`;
+    list.appendChild(heading);
+    result.roundsLog.forEach((entry) => {
+      const item = document.createElement('li');
+      item.textContent = entry;
+      list.appendChild(item);
     });
+  });
 }
 
 function formatSeconds(value) {
