@@ -270,13 +270,13 @@ button.blink {
 }
 
 .playground .hint {
-  color: rgba(255, 255, 255, 0.7);
-  margin-bottom: 1rem;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 1rem;
 }
 
 .level-score {
-  margin: 0.6rem 0 1rem;
-  font-weight: 600;
+    margin: 0.6rem 0 1rem;
+    font-weight: 600;
 }
 
 .playground .question-list {

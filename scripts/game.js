@@ -314,16 +314,16 @@ function createLampEngine(context) {
     const {playground, profile, onScore, onPenalty, onRoundProgress, onComplete} = context;
     const rounds = randomInt(3, 5);
     onRoundProgress(0, rounds);
-  let completed = 0;
-  let levelScore = 0;
-  let levelPenalty = 0;
-  const roundsLog = [];
-  let active = false;
-  let finished = false;
-  let targetDelay = 0;
-  let startStamp = 0;
-  let bulbTimeout;
-  let failTimeout;
+    let completed = 0;
+    let levelScore = 0;
+    let levelPenalty = 0;
+    const roundsLog = [];
+    let active = false;
+    let finished = false;
+    let targetDelay = 0;
+    let startStamp = 0;
+    let bulbTimeout;
+    let failTimeout;
     const board = document.createElement('div');
     board.className = 'lamp-board';
     const lamp = document.createElement('div');
@@ -350,9 +350,9 @@ function createLampEngine(context) {
 
     hint.textContent = 'Запустите попытку, дождитесь вспышки и жмите пробел.';
 
-  function startRound() {
-    if (active || finished) return;
-    active = true;
+    function startRound() {
+        if (active || finished) return;
+        active = true;
         targetDelay = randomBetween(1500, 3500);
         startStamp = performance.now();
         hint.textContent = 'Сфокусируйтесь. Вспышка будет скоро.';
@@ -376,9 +376,9 @@ function createLampEngine(context) {
         concludeRound(performance.now());
     }
 
-  function concludeRound(stamp) {
-    active = false;
-    document.removeEventListener('keydown', handlePress);
+    function concludeRound(stamp) {
+        active = false;
+        document.removeEventListener('keydown', handlePress);
         clearTimeout(bulbTimeout);
         clearTimeout(failTimeout);
         const elapsed = stamp - startStamp;
@@ -399,20 +399,20 @@ function createLampEngine(context) {
                 penalty ? `, штраф ${penalty}` : ''
             }`,
         );
-    if (completed >= rounds) {
-      finishLevel();
+        if (completed >= rounds) {
+            finishLevel();
+        }
     }
-  }
 
     button.addEventListener('click', startRound);
 
-  function finishLevel() {
-    finished = true;
-    button.disabled = true;
-    const average = completed ? levelScore / completed : 0;
-    const success = completed === rounds && average >= 60;
-    onComplete({
-      id: 'lamp',
+    function finishLevel() {
+        finished = true;
+        button.disabled = true;
+        const average = completed ? levelScore / completed : 0;
+        const success = completed === rounds && average >= 60;
+        onComplete({
+            id: 'lamp',
             score: levelScore,
             penalty: levelPenalty,
             success,
@@ -422,14 +422,14 @@ function createLampEngine(context) {
         });
     }
 
-  return {
-    abort(reason) {
-      finished = true;
-      button.disabled = true;
-      document.removeEventListener('keydown', handlePress);
-      clearTimeout(bulbTimeout);
-      clearTimeout(failTimeout);
-      log.push(`Рунд остановлен: ${reason}`);
+    return {
+        abort(reason) {
+            finished = true;
+            button.disabled = true;
+            document.removeEventListener('keydown', handlePress);
+            clearTimeout(bulbTimeout);
+            clearTimeout(failTimeout);
+            log.push(`Рунд остановлен: ${reason}`);
             onComplete({
                 id: 'lamp',
                 success: false,
@@ -447,12 +447,12 @@ function createRunnerEngine(context) {
     const {playground, profile, onScore, onPenalty, onRoundProgress, onComplete} = context;
     const rounds = randomInt(3, 5);
     onRoundProgress(0, rounds);
-  let completed = 0;
-  let levelScore = 0;
-  let levelPenalty = 0;
-  const roundsLog = [];
-  let finished = false;
-  const track = document.createElement('div');
+    let completed = 0;
+    let levelScore = 0;
+    let levelPenalty = 0;
+    const roundsLog = [];
+    let finished = false;
+    const track = document.createElement('div');
     track.className = 'track';
     const trackLine = document.createElement('div');
     trackLine.className = 'track__line';
@@ -477,9 +477,9 @@ function createRunnerEngine(context) {
     let startStamp = 0;
     let ready = false;
 
-  function prepareRound() {
-    if (dragging || finished) return;
-    ready = true;
+    function prepareRound() {
+        if (dragging || finished) return;
+        ready = true;
         targetDelay = randomBetween(2000, 4500);
         hint.textContent = `Таймер начнётся, когда возьмёте мышку. Нужно ${formatMs(targetDelay)} c.`;
         positionRunner(0.1);
@@ -501,9 +501,9 @@ function createRunnerEngine(context) {
         goal.style.top = `calc(50% + ${yOffset}px)`;
     }
 
-  runner.addEventListener('pointerdown', (event) => {
-    if (!ready || finished) return;
-    event.preventDefault(); // отключаем выделение текста при перетаскивании
+    runner.addEventListener('pointerdown', (event) => {
+        if (!ready || finished) return;
+        event.preventDefault(); // отключаем выделение текста при перетаскивании
         dragging = true;
         runner.classList.add('dragging');
         runner.setPointerCapture(event.pointerId);
@@ -511,8 +511,8 @@ function createRunnerEngine(context) {
         hint.textContent = `Таймер пошёл. Нужно ${formatMs(targetDelay)} c.`;
     });
 
-  runner.addEventListener('pointermove', (event) => {
-    if (!dragging || finished) return;
+    runner.addEventListener('pointermove', (event) => {
+        if (!dragging || finished) return;
         const rect = track.getBoundingClientRect();
         const relX = clamp(event.clientX - rect.left, 30, rect.width - 30);
         const relY = clamp(event.clientY - rect.top, 20, rect.height - 20);
@@ -520,8 +520,8 @@ function createRunnerEngine(context) {
         runner.style.top = `${relY}px`;
     });
 
-  runner.addEventListener('pointerup', (event) => {
-    if (!dragging || finished) return;
+    runner.addEventListener('pointerup', (event) => {
+        if (!dragging || finished) return;
         dragging = false;
         ready = false;
         runner.classList.remove('dragging');
@@ -554,13 +554,13 @@ function createRunnerEngine(context) {
                 offset,
             )} c, очки ${score}`,
         );
-    if (completed >= rounds) {
-      finished = true;
-      ready = false;
-      runner.style.pointerEvents = 'none';
-      const average = levelScore / rounds;
-      const success = completed === rounds && average >= 65;
-      onComplete({
+        if (completed >= rounds) {
+            finished = true;
+            ready = false;
+            runner.style.pointerEvents = 'none';
+            const average = levelScore / rounds;
+            const success = completed === rounds && average >= 65;
+            onComplete({
                 id: 'runner',
                 success,
                 rounds,
@@ -576,13 +576,13 @@ function createRunnerEngine(context) {
 
     prepareRound();
 
-  return {
-    abort(reason) {
-      finished = true;
-      ready = false;
-      runner.style.pointerEvents = 'none';
-      dragging = false;
-      log.push(`Забег отменён: ${reason}`);
+    return {
+        abort(reason) {
+            finished = true;
+            ready = false;
+            runner.style.pointerEvents = 'none';
+            dragging = false;
+            log.push(`Забег отменён: ${reason}`);
             onComplete({
                 id: 'runner',
                 success: false,
@@ -601,13 +601,13 @@ function createPulseEngine(context) {
     const rounds = randomInt(3, 5);
     onRoundProgress(0, rounds);
     let completed = 0;
-  let levelScore = 0;
-  let levelPenalty = 0;
-  let waitingClick = false;
-  let expectedStamp = 0;
-  let sequenceActive = false;
-  const roundsLog = [];
-  let finished = false;
+    let levelScore = 0;
+    let levelPenalty = 0;
+    let waitingClick = false;
+    let expectedStamp = 0;
+    let sequenceActive = false;
+    const roundsLog = [];
+    let finished = false;
     const info = document.createElement('p');
     info.className = 'hint';
     const button = document.createElement('button');
@@ -628,17 +628,17 @@ function createPulseEngine(context) {
 
     info.textContent = 'Наблюдайте за вспышками, затем двойной клик.';
 
-  button.addEventListener('click', () => {
-    if (waitingClick || sequenceActive || finished) return;
-    startPulse();
-  });
+    button.addEventListener('click', () => {
+        if (waitingClick || sequenceActive || finished) return;
+        startPulse();
+    });
 
-  target.addEventListener('dblclick', () => {
-    if (!waitingClick || finished) {
-      levelPenalty += onPenalty(profile.penaltyFactor / 2);
-      log.push('Двойной клик слишком рано.');
-      return;
-    }
+    target.addEventListener('dblclick', () => {
+        if (!waitingClick || finished) {
+            levelPenalty += onPenalty(profile.penaltyFactor / 2);
+            log.push('Двойной клик слишком рано.');
+            return;
+        }
         waitingClick = false;
         sequenceActive = false;
         const offset = performance.now() - expectedStamp;
@@ -660,13 +660,13 @@ function createPulseEngine(context) {
                 ? resultText
                 : `${resultText} · Нажмите «Показать интервалы».`;
             pushRoundLog(logText);
-      if (isFinal) {
-        finished = true;
-        button.disabled = true;
-        target.style.pointerEvents = 'none';
-        const average = levelScore / rounds;
-        const success = completed === rounds && average >= 70;
-        onComplete({
+            if (isFinal) {
+                finished = true;
+                button.disabled = true;
+                target.style.pointerEvents = 'none';
+                const average = levelScore / rounds;
+                const success = completed === rounds && average >= 70;
+                onComplete({
                     id: 'pulse',
                     success,
                     rounds,
@@ -679,12 +679,12 @@ function createPulseEngine(context) {
         }, 1000);
     });
 
-  function startPulse() {
-    waitingClick = false;
-    if (finished) return;
-    sequenceActive = true;
-    button.disabled = true;
-    target.classList.remove('active');
+    function startPulse() {
+        waitingClick = false;
+        if (finished) return;
+        sequenceActive = true;
+        button.disabled = true;
+        target.classList.remove('active');
         const delay = randomBetween(1200, 2600);
         const width = Math.max(160, zone.clientWidth - 140);
         const height = Math.max(160, zone.clientHeight - 140);
@@ -702,13 +702,13 @@ function createPulseEngine(context) {
         }, delay);
     }
 
-  return {
-    abort(reason) {
-      finished = true;
-      button.disabled = true;
-      target.style.pointerEvents = 'none';
-      waitingClick = false;
-      log.push(`Серия остановлена: ${reason}`);
+    return {
+        abort(reason) {
+            finished = true;
+            button.disabled = true;
+            target.style.pointerEvents = 'none';
+            waitingClick = false;
+            log.push(`Серия остановлена: ${reason}`);
             onComplete({
                 id: 'pulse',
                 success: false,
