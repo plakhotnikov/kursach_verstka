@@ -19,7 +19,7 @@ const safeParse = (value, fallback) => {
     }
 };
 
-export const storage = {
+window.storage = {
     saveCurrentPlayer(payload) {
         localStorage.setItem(STORAGE_KEYS.current, JSON.stringify(payload));
     },

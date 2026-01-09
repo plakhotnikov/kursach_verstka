@@ -1,4 +1,4 @@
-import {storage} from './storage.js';
+const storage = window.storage;
 
 document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('start-form');

@@ -1,4 +1,4 @@
-import {storage} from './storage.js';
+const storage = window.storage;
 
 const player = storage.getCurrentPlayer();
 if (!player) {
